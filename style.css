@@ -1,0 +1,49 @@
+/* --- Basestil (HR-venlig, rolig, professionel) --- */
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  max-width: 650px;
+  margin: 50px auto;
+  padding: 0 24px;
+  line-height: 1.7;
+  color: #1a1a1a;
+  background: #f5f7fa;
+}
+
+/* --- Overskrifter --- */
+h1 {
+  font-size: 1.9em;
+  margin-bottom: 12px;
+  color: #0f2b46;
+  font-weight: 600;
+}
+
+/* --- Forside-menu --- */
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0;
+}
+
+.menu li {
+  margin: 14px 0;
+}
+
+.menu a {
+  display: block;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #0f2b46;
+  border: 1px solid #d6d9dd;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.menu a:hover {
+  background: #eef2f6;
+  border-color: #c4c9cf;
+}
+
+/* --- Video --- */
+video {
+  margin
