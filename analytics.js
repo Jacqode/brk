@@ -1,2 +1,3 @@
-// Simpel, privatlivsvenlig analytics
-fetch("https://api.countapi.xyz/hit/plugpause/" + window.location.pathname);
+// Simpel, privatlivsvenlig analytics med wake.html
+
+fetch("https://api.countapi.xyz/hit/plugpause//wake.html");
