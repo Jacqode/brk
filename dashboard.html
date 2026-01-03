@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>Plug & Pause – HR Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; }
+    h1 { font-size: 24px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    .small { font-size: 12px; color: #666; margin-top: 20px; }
+  </style>
+</head>
+<body>
 
+<h1>Plug & Pause – HR Dashboard</h1>
+<p>Live tal baseret på anonym CountAPI tracking.</p>
+
+<table>
+  <tr><th>Pause</th><th>Antal</th><th>Andel</th></tr>
+  <tr><td>Wake</td><td id="wake">–</td><td id="wake_pct">–</td></tr>
+  <tr><td>Stretch</td><td id="stretch">–</td><td id="stretch_pct">–</td></tr>
+  <tr><td>Breathe</td><td id="breathe">–</td><td id="breathe_pct">–</td></tr>
+  <tr><td><strong>Total</strong></td><td id="total">–</td><td></td></tr>
+</table>
+
+<p class="small">Alle data er 100% anonyme og baseret på sidevisninger.</p>
+
+<script>
+async function getCount(path) {
+  const url = "https://api.countapi.xyz/get/plugpause/" + path;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.value || 0;
+}
+
+async function loadStats() {
+  const wake = await getCount("//wake.html");
+  const stretch = await getCount("//stretch.html");
+  const breathe = await getCount("//breathe.html");
+
+  const total = wake + stretch + breathe;
+
+  document.getElementById("wake").textContent = wake;
+  document.getElementById("stretch").textContent = stretch;
+  document.getElementById("breathe").textContent = breathe;
+  document.getElementById("total").textContent = total;
+
+  document.getElementById("wake_pct").textContent =
+    total ? Math.round((wake / total) * 100) + "%" : "–";
+  document.getElementById("stretch_pct").textContent =
+    total ? Math.round((stretch / total) * 100) + "%" : "–";
+  document.getElementById("breathe_pct").textContent =
+    total ? Math.round((breathe / total) * 100) + "%" : "–";
+}
+
+loadStats();
+</script>
+
+</body>
+</html>
