@@ -2,65 +2,38 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <title>Plug & Pause – HR Dashboard</title>
+  <title>Plug & Pause – DEBUG Dashboard</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; }
     h1 { font-size: 24px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
-    .small { font-size: 12px; color: #666; margin-top: 20px; }
+    pre { background: #f4f4f4; padding: 10px; font-size: 12px; overflow-x: auto; }
+    .error { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<h1>Plug & Pause – HR Dashboard</h1>
-<p>Live tal baseret på anonym tracking via din egen Cloudflare Worker.</p>
+<h1>Plug & Pause – DEBUG Dashboard</h1>
+<p>Live data fra din Cloudflare Worker vises herunder:</p>
 
-<table>
-  <tr><th>Pause</th><th>Antal</th><th>Andel</th></tr>
-  <tr><td>Wake</td><td id="wake">–</td><td id="wake_pct">–</td></tr>
-  <tr><td>Stretch</td><td id="stretch">–</td><td id="stretch_pct">–</td></tr>
-  <tr><td>Breathe</td><td id="breathe">–</td><td id="breathe_pct">–</td></tr>
-  <tr><td><strong>Total</strong></td><td id="total">–</td><td></td></tr>
-</table>
-
-<p class="small">Alle data er 100% anonyme og baseret på pseudonymiseret event-tracking.</p>
+<pre id="output">Indlæser…</pre>
 
 <script>
 async function loadStats() {
-  const org = "plugpause"; // Skift til din organisations-id hvis nødvendigt
+  const org = "plugpause";
   const url = `https://plugplay-standalone.jakobhelkjaer.workers.dev/stats?org=${org}`;
+  const output = document.getElementById("output");
 
   try {
     const res = await fetch(url);
     const data = await res.json();
-
-    const wake = data.events.wake || 0;
-    const stretch = data.events.stretch || 0;
-    const breathe = data.events.breathe || 0;
-    const total = wake + stretch + breathe;
-
-    document.getElementById("wake").textContent = wake;
-    document.getElementById("stretch").textContent = stretch;
-    document.getElementById("breathe").textContent = breathe;
-    document.getElementById("total").textContent = total;
-
-    document.getElementById("wake_pct").textContent =
-      total ? Math.round((wake / total) * 100) + "%" : "–";
-    document.getElementById("stretch_pct").textContent =
-      total ? Math.round((stretch / total) * 100) + "%" : "–";
-    document.getElementById("breathe_pct").textContent =
-      total ? Math.round((breathe / total) * 100) + "%" : "–";
-
+    output.textContent = JSON.stringify(data, null, 2);
   } catch (err) {
-    console.error("Fejl ved hentning af data:", err);
+    output.innerHTML = `<span class="error">Fejl ved hentning af data:</span>\n${err}`;
   }
 }
 
 loadStats();
-setInterval(loadStats, 10000);
 </script>
 
 </body>
 </html>
-
