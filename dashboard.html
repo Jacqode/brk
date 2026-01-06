@@ -2,37 +2,181 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <title>Plug & Pause – DEBUG Dashboard</title>
+  <title>Plug & Pause – Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; }
-    h1 { font-size: 24px; }
-    pre { background: #f4f4f4; padding: 10px; font-size: 12px; overflow-x: auto; }
-    .error { color: red; font-weight: bold; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 { margin-bottom: 5px; }
+    h2 { margin-top: 40px; }
+    button {
+      padding: 10px 15px;
+      margin: 5px 0;
+      border: none;
+      background: #4A90E2;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #1C4E80; }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+    #loginBox {
+      margin-top: 100px;
+      text-align: center;
+    }
+    #dashboard {
+      display: none;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
+
 <body>
 
-<h1>Plug & Pause – DEBUG Dashboard</h1>
-<p>Live data fra din Cloudflare Worker vises herunder:</p>
+<!-- LOGIN -->
+<div id="loginBox">
+  <h2>Login til Plug & Pause Dashboard</h2>
+  <p>Indtast adgangskode:</p>
+  <input type="password" id="loginInput" placeholder="Adgangskode">
+  <br>
+  <button onclick="checkLogin()">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
 
-<pre id="output">Indlæser…</pre>
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <h1>Plug & Pause – Dashboard</h1>
+  <p>Live data fra Cloudflare Worker.</p>
+
+  <!-- BAR CHART -->
+  <h2>Event-oversigt</h2>
+  <canvas id="eventChart"></canvas>
+
+  <!-- LINE CHART -->
+  <h2>Aktivitet over tid</h2>
+  <canvas id="lineChart"></canvas>
+
+  <!-- ADMIN PANEL -->
+  <h2>Admin-panel</h2>
+  <button onclick="sendTestEvent('stretch')">Send test-event (stretch)</button>
+  <button onclick="resetData()">Nulstil data</button>
+
+  <!-- RAW DATA -->
+  <h2>Rå data</h2>
+  <pre id="rawData">Indlæser…</pre>
+
+</div>
 
 <script>
-async function loadStats() {
-  const org = "plugpause";
-  const url = `https://plugplay-standalone.jakobhelkjaer.workers.dev/stats?org=${org}`;
-  const output = document.getElementById("output");
+const ORG = "plugpause";
+const BASE = "https://plugplay-standalone.jakobhelkjaer.workers.dev";
+const LOGIN_CODE = "plugpause2025";   // ← Ændr adgangskoden her
+let refreshTimer = null;
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    output.textContent = JSON.stringify(data, null, 2);
-  } catch (err) {
-    output.innerHTML = `<span class="error">Fejl ved hentning af data:</span>\n${err}`;
+// LOGIN FUNKTION
+function checkLogin() {
+  const input = document.getElementById("loginInput").value;
+  if (input === LOGIN_CODE) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    loadDashboard();
+    startAutoRefresh();
+  } else {
+    document.getElementById("loginError").textContent = "Forkert kode";
   }
 }
 
-loadStats();
+// AUTO-REFRESH
+function startAutoRefresh() {
+  refreshTimer = setInterval(loadDashboard, 10000); // 10 sekunder
+}
+
+async function loadDashboard() {
+  const res = await fetch(`${BASE}/stats?org=${ORG}`);
+  const data = await res.json();
+
+  document.getElementById("rawData").textContent =
+    JSON.stringify(data, null, 2);
+
+  drawBarChart(data.events);
+  drawLineChart(data.history);
+}
+
+let barChart = null;
+let lineChart = null;
+
+function drawBarChart(events) {
+  const ctx = document.getElementById("eventChart").getContext("2d");
+
+  if (barChart) barChart.destroy();
+
+  barChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(events),
+      datasets: [{
+        label: "Antal events",
+        data: Object.values(events),
+        backgroundColor: "#4A90E2",
+        borderColor: "#1C4E80",
+        borderWidth: 2
+      }]
+    },
+    options: { responsive: true }
+  });
+}
+
+function drawLineChart(history) {
+  const ctx = document.getElementById("lineChart").getContext("2d");
+
+  if (lineChart) lineChart.destroy();
+
+  const labels = history.map(h => new Date(h.ts).toLocaleTimeString());
+  const values = history.map(h => 1);
+
+  lineChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Events over tid",
+        data: values,
+        borderColor: "#E24A4A",
+        backgroundColor: "rgba(226,74,74,0.2)",
+        tension: 0.3
+      }]
+    },
+    options: { responsive: true }
+  });
+}
+
+async function sendTestEvent(event) {
+  await fetch(`${BASE}/track?org=${ORG}&user=test&event=${event}`);
+  loadDashboard();
+}
+
+async function resetData() {
+  await fetch(`${BASE}/reset?org=${ORG}`);
+  loadDashboard();
+}
 </script>
 
 </body>
