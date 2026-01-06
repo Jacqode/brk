@@ -14,7 +14,7 @@
 <body>
 
 <h1>Plug & Pause – HR Dashboard</h1>
-<p>Live tal baseret på anonym CountAPI tracking.</p>
+<p>Live tal baseret på anonym tracking via din egen Cloudflare Worker.</p>
 
 <table>
   <tr><th>Pause</th><th>Antal</th><th>Andel</th></tr>
@@ -24,37 +24,41 @@
   <tr><td><strong>Total</strong></td><td id="total">–</td><td></td></tr>
 </table>
 
-<p class="small">Alle data er 100% anonyme og baseret på sidevisninger.</p>
+<p class="small">Alle data er 100% anonyme og baseret på pseudonymiseret event-tracking.</p>
 
 <script>
-async function getCount(path) {
-  const url = "https://api.countapi.xyz/get/plugpause/" + path;
-  const res = await fetch(url);
-  const data = await res.json();
-  return data.value || 0;
-}
-
 async function loadStats() {
-  const wake = await getCount("//wake.html");
-  const stretch = await getCount("//stretch.html");
-  const breathe = await getCount("//breathe.html");
+  const org = "plugpause"; // Skift til din organisations-id hvis nødvendigt
+  const url = `https://plugplay-standalone.jakobhelkjaer.workers.dev/stats?org=${org}`;
 
-  const total = wake + stretch + breathe;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
 
-  document.getElementById("wake").textContent = wake;
-  document.getElementById("stretch").textContent = stretch;
-  document.getElementById("breathe").textContent = breathe;
-  document.getElementById("total").textContent = total;
+    const wake = data.events.wake || 0;
+    const stretch = data.events.stretch || 0;
+    const breathe = data.events.breathe || 0;
+    const total = wake + stretch + breathe;
 
-  document.getElementById("wake_pct").textContent =
-    total ? Math.round((wake / total) * 100) + "%" : "–";
-  document.getElementById("stretch_pct").textContent =
-    total ? Math.round((stretch / total) * 100) + "%" : "–";
-  document.getElementById("breathe_pct").textContent =
-    total ? Math.round((breathe / total) * 100) + "%" : "–";
+    document.getElementById("wake").textContent = wake;
+    document.getElementById("stretch").textContent = stretch;
+    document.getElementById("breathe").textContent = breathe;
+    document.getElementById("total").textContent = total;
+
+    document.getElementById("wake_pct").textContent =
+      total ? Math.round((wake / total) * 100) + "%" : "–";
+    document.getElementById("stretch_pct").textContent =
+      total ? Math.round((stretch / total) * 100) + "%" : "–";
+    document.getElementById("breathe_pct").textContent =
+      total ? Math.round((breathe / total) * 100) + "%" : "–";
+
+  } catch (err) {
+    console.error("Fejl ved hentning af data:", err);
+  }
 }
 
 loadStats();
+setInterval(loadStats, 10000);
 </script>
 
 </body>
