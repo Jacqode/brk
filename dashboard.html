@@ -95,4 +95,232 @@
     .status {
       font-size: 12px;
       color: #6b7280;
-      margin
+      margin-top: 6px;
+    }
+    .status span {
+      font-weight: 500;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      color: #374151;
+      margin-left: 6px;
+    }
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .small {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Plug & Pause – HR dashboard</h1>
+    <span>Live overblik over brug af mikropauser</span>
+  </div>
+  <div>
+    <span class="small">Organisation: <strong>plugpause</strong></span>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card">
+      <h2>Event-oversigt</h2>
+      <p>Samlet fordeling af registrerede events for organisationen.</p>
+      <canvas id="barChart"></canvas>
+    </section>
+
+    <section class="card">
+      <h2>Admin-panel</h2>
+      <p>Test integrationen og nulstil data for organisationen.</p>
+      <div class="admin-buttons">
+        <button id="btnTestStretch" class="primary">Send test-event (stretch)</button>
+        <button id="btnTestWake" class="secondary">Send test-event (wake)</button>
+        <button id="btnReset" class="danger">Nulstil data</button>
+      </div>
+      <div class="status" id="adminStatus">Status: <span>klar</span></div>
+      <p class="small" style="margin-top:10px;">
+        Data hentes løbende fra systemet og grupperes pr. dag automatisk.
+      </p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Aktivitet pr. dag</h2>
+    <p>Samlet antal registrerede events pr. dag (alle event-typer).</p>
+    <div class="badge">
+      <span class="badge-dot"></span> Live data
+    </div>
+    <canvas id="lineChart"></canvas>
+    <p class="small" id="lastUpdated" style="margin-top:8px;">Senest opdateret: –</p>
+  </section>
+</main>
+
+<script>
+  const ORG = "plugpause";
+  const BASE_URL = "https://plugplay-standalone.jakobhelkjaer.workers.dev";
+
+  const barCtx = document.getElementById("barChart").getContext("2d");
+  const lineCtx = document.getElementById("lineChart").getContext("2d");
+
+  const barChart = new Chart(barCtx, {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Events",
+        data: [],
+        backgroundColor: ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  const lineChart = new Chart(lineCtx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Events pr. dag",
+        data: [],
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239,68,68,0.15)",
+        tension: 0.2,
+        fill: true,
+        pointRadius: 3,
+        pointBackgroundColor: "#ef4444"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  function groupHistoryByDay(history) {
+    const result = {};
+    history.forEach(entry => {
+      const date = new Date(entry.ts);
+      const day = date.toISOString().split("T")[0];
+      if (!result[day]) result[day] = {};
+      if (!result[day][entry.event]) result[day][entry.event] = 0;
+      result[day][entry.event] += 1;
+    });
+    return result;
+  }
+
+  function prepareDailyChartData(grouped) {
+    const labels = Object.keys(grouped).sort();
+    const values = labels.map(day =>
+      Object.values(grouped[day]).reduce((a, b) => a + b, 0)
+    );
+    return { labels, values };
+  }
+
+  async function fetchStats() {
+    const res = await fetch(`${BASE_URL}/stats?org=${ORG}`, {
+      headers: { "Cache-Control": "no-cache" }
+    });
+    return await res.json();
+  }
+
+  function updateChartsFromData(data) {
+    const events = data.events || {};
+    const labels = Object.keys(events);
+    const values = labels.map(k => events[k]);
+
+    barChart.data.labels = labels;
+    barChart.data.datasets[0].data = values;
+    barChart.update();
+
+    const grouped = groupHistoryByDay(data.history || []);
+    const daily = prepareDailyChartData(grouped);
+
+    lineChart.data.labels = daily.labels;
+    lineChart.data.datasets[0].data = daily.values;
+    lineChart.update();
+
+    document.getElementById("lastUpdated").textContent =
+      "Senest opdateret: " + new Date().toLocaleString("da-DK");
+  }
+
+  async function refreshDashboard() {
+    try {
+      const data = await fetchStats();
+      updateChartsFromData(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function callWorker(path) {
+    const res = await fetch(path);
+    return { ok: res.ok, text: await res.text() };
+  }
+
+  function setAdminStatus(message) {
+    document.querySelector("#adminStatus span").textContent = message;
+  }
+
+  async function handleTestEvent(eventName) {
+    setAdminStatus(`sender test-event (${eventName})...`);
+    const url = `${BASE_URL}/track?org=${ORG}&user=test&event=${eventName}`;
+    const res = await callWorker(url);
+    if (res.ok) {
+      setAdminStatus(`test-event (${eventName}) sendt`);
+      refreshDashboard();
+    } else {
+      setAdminStatus(`fejl ved test-event (${eventName})`);
+    }
+  }
+
+  async function handleReset() {
+    setAdminStatus("nulstiller data...");
+    const url = `${BASE_URL}/reset?org=${ORG}`;
+    const res = await callWorker(url);
+    if (res.ok) {
+      setAdminStatus("data nulstillet");
+      refreshDashboard();
+    } else {
+      setAdminStatus("fejl ved nulstilling");
+    }
+  }
+
+  document.getElementById("btnTestStretch").addEventListener("click", () => handleTestEvent("stretch"));
+  document.getElementById("btnTestWake").addEventListener("click", () => handleTestEvent("wake"));
+  document.getElementById("btnReset").addEventListener("click", () => handleReset());
+
+  refreshDashboard();
+  setInterval(refreshDashboard, 10000);
+</script>
+</body>
+</html>
