@@ -1,6 +1,6 @@
 (function() {
   const ORG = document.currentScript.getAttribute("data-org") || "demo-org";
-  const INTERVAL_MINUTES = 60;
+  const INTERVAL_MINUTES = 0.1; // ca. 6 sekunder
   const userId = getUserId();
 
   function getUserId() {
