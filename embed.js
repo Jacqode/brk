@@ -1,6 +1,11 @@
-(function() {
+(function () {
+  // ORG hentes fra script-tagget, ellers fallback til plugpause
   const ORG = document.currentScript.getAttribute("data-org") || "plugpause";
-  const INTERVAL_MINUTES = 0.1; // ca. 6 sekunder
+
+  // Hvor ofte widgetten skal vises igen (0.1 min = 6 sek)
+  const INTERVAL_MINUTES = 0.1;
+
+  // Unik bruger-ID gemt i browseren
   const userId = getUserId();
 
   function getUserId() {
@@ -14,6 +19,7 @@
   }
 
   function showWidget() {
+    // Undgå duplikater
     if (document.getElementById("plugpause-widget")) return;
 
     const box = document.createElement("div");
@@ -26,6 +32,7 @@
       font-family: sans-serif; font-size: 14px;
       z-index: 9999;
     `;
+
     box.innerHTML = `
       <strong>Plug & Pause</strong><br>
       Tid til en mikropause!<br>
@@ -36,15 +43,28 @@
         cursor: pointer;
       ">Jeg tog en pause</button>
     `;
+
     document.body.appendChild(box);
 
+    // Når brugeren klikker på knappen
     document.getElementById("plugpause-btn").onclick = () => {
-      fetch(`https://plugpause.workers.dev/track?org=${ORG}&user=${getUserId()}&event=pause`);
+      // Send event til din Worker
+      fetch(
+        `https://plugplay-standalone.jakobhelkjaer.workers.dev/track?org=${ORG}&user=${userId}&event=pause`,
+        { method: "GET" }
+      );
+
+      // Feedback til brugeren
       box.innerHTML = "Tak for pausen! 👌";
+
+      // Fjern widget efter 3 sek
       setTimeout(() => box.remove(), 3000);
+
+      // Vis den igen efter intervallet
       setTimeout(showWidget, INTERVAL_MINUTES * 60 * 1000);
     };
   }
 
+  // Start første visning
   setTimeout(showWidget, INTERVAL_MINUTES * 60 * 1000);
 })();
