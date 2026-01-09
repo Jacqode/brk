@@ -68,3 +68,4 @@
   // Start første visning
   setTimeout(showWidget, INTERVAL_MINUTES * 60 * 1000);
 })();
+// redeploy
