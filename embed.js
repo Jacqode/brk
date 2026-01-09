@@ -39,7 +39,7 @@
     document.body.appendChild(box);
 
     document.getElementById("plugpause-btn").onclick = () => {
-      fetch(`https://plugpause.workers.dev/track?org=${ORG}&user=${userId}&event=pause`);
+      fetch(`https://plugpause.workers.dev/track?org=${ORG}&user=${getUserId()}&event=pause`);
       box.innerHTML = "Tak for pausen! 👌";
       setTimeout(() => box.remove(), 3000);
       setTimeout(showWidget, INTERVAL_MINUTES * 60 * 1000);
