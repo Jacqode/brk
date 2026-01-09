@@ -154,7 +154,6 @@
       <div class="admin-buttons">
         <button id="btnTestStretch" class="primary">Send test-event (stretch)</button>
         <button id="btnTestWake" class="secondary">Send test-event (wake)</button>
-        <button id="btnReset" class="danger">Nulstil data</button>
       </div>
       <div class="status" id="adminStatus">Status: <span>klar</span></div>
       <p class="small" style="margin-top:10px;">
@@ -317,10 +316,10 @@
 
   document.getElementById("btnTestStretch").addEventListener("click", () => handleTestEvent("stretch"));
   document.getElementById("btnTestWake").addEventListener("click", () => handleTestEvent("wake"));
-  document.getElementById("btnReset").addEventListener("click", () => handleReset());
 
   refreshDashboard();
   setInterval(refreshDashboard, 10000);
 </script>
 </body>
 </html>
+
