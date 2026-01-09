@@ -1,5 +1,5 @@
 (function() {
-  const ORG = document.currentScript.getAttribute("data-org") || "demo-org";
+  const ORG = document.currentScript.getAttribute("data-org") || "plugpause";
   const INTERVAL_MINUTES = 0.1; // ca. 6 sekunder
   const userId = getUserId();
 
