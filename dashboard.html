@@ -305,8 +305,9 @@ function prepareHourlyChartData(grouped) {
     barChart.data.datasets[0].data = values;
     barChart.update();
 
-    const grouped = groupHistoryByDay(data.history || []);
-    const daily = prepareDailyChartData(grouped);
+    const grouped = groupHistoryByHour(data.history || []);
+    const hourly = prepareHourlyChartData(grouped);
+
 
 // --- SPC analyse ---
 const spc = analyzeSPC(daily.values);
@@ -389,6 +390,7 @@ if (spc.status === "ikke-tilfældig variation") {
   
 </body>
 </html>
+
 
 
 
