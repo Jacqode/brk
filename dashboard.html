@@ -273,6 +273,17 @@ document.getElementById("spcStatus").textContent =
   spc.status === "for få datapunkter"
     ? "SPC: For få datapunkter til analyse"
     : `SPC: ${spc.status} (median: ${spc.median}, længste serie: ${spc.run}, kryds: ${spc.crosses})`;
+
+    // Farvekodning
+const spcEl = document.getElementById("spcStatus");
+
+if (spc.status === "ikke-tilfældig variation") {
+  spcEl.style.color = "#dc2626"; // rød
+} else if (spc.status === "tilfældig variation") {
+  spcEl.style.color = "#16a34a"; // grøn
+} else {
+  spcEl.style.color = "#6b7280"; // grå (for få datapunkter)
+}
     
     lineChart.data.labels = daily.labels;
     lineChart.data.datasets[0].data = daily.values;
@@ -335,6 +346,7 @@ document.getElementById("spcStatus").textContent =
   
 </body>
 </html>
+
 
 
 
