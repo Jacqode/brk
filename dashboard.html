@@ -329,8 +329,9 @@ if (spc.status === "ikke-tilfældig variation") {
   spcEl.style.color = "#6b7280"; // grå (for få datapunkter)
 }
     
-    lineChart.data.labels = daily.labels;
-    lineChart.data.datasets[0].data = daily.values;
+lineChart.data.labels = hourly.labels;
+lineChart.data.datasets[0].data = hourly.values;
+
     lineChart.update();
 
     document.getElementById("lastUpdated").textContent =
@@ -390,6 +391,7 @@ if (spc.status === "ikke-tilfældig variation") {
   
 </body>
 </html>
+
 
 
 
