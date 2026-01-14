@@ -310,7 +310,7 @@ function prepareHourlyChartData(grouped) {
 
 
 // --- SPC analyse ---
-const spc = analyzeSPC(daily.values);
+const spc = analyzeSPC(hourly.values);
 
 // Opdater SPC-status i UI
 document.getElementById("spcStatus").textContent =
@@ -391,6 +391,7 @@ lineChart.data.datasets[0].data = hourly.values;
   
 </body>
 </html>
+
 
 
 
