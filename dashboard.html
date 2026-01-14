@@ -246,6 +246,30 @@
     return { labels, values };
   }
 
+  function groupHistoryByHour(history) {
+    const grouped = {};
+
+  history.forEach(item => {
+    const date = new Date(item.timestamp);
+    const day = date.toISOString().split("T")[0]; // fx 2025-01-14
+    const hour = date.getHours(); // fx 8
+
+    // Vi vil kun have timer 07–18
+    if (hour < 7 || hour > 18) return;
+
+    const key = `${day} ${hour}:00`;
+
+    if (!grouped[key]) {
+      grouped[key] = 0;
+    }
+    grouped[key]++;
+  });
+
+  return grouped;
+}
+
+
+
   async function fetchStats() {
     const res = await fetch(`${BASE_URL}/stats?org=${ORG}`, {
       headers: { "Cache-Control": "no-cache" }
@@ -346,6 +370,7 @@ if (spc.status === "ikke-tilfældig variation") {
   
 </body>
 </html>
+
 
 
 
