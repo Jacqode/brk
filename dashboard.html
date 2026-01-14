@@ -268,7 +268,26 @@
   return grouped;
 }
 
+function prepareHourlyChartData(grouped) {
+  const hours = [];
+  const values = [];
 
+  // Find alle dage i datasættet
+  const days = [...new Set(Object.keys(grouped).map(key => key.split(" ")[0]))];
+
+  days.sort(); // sortér datoer
+
+  days.forEach(day => {
+    for (let hour = 7; hour <= 18; hour++) {
+      const key = `${day} ${hour}:00`;
+
+      hours.push(`${day} kl. ${hour}`); // label til grafen
+      values.push(grouped[key] || 0);   // 0 hvis ingen events
+    }
+  });
+
+  return { labels: hours, values };
+}
 
   async function fetchStats() {
     const res = await fetch(`${BASE_URL}/stats?org=${ORG}`, {
@@ -370,6 +389,7 @@ if (spc.status === "ikke-tilfældig variation") {
   
 </body>
 </html>
+
 
 
 
