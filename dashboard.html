@@ -265,6 +265,15 @@
     const grouped = groupHistoryByDay(data.history || []);
     const daily = prepareDailyChartData(grouped);
 
+// --- SPC analyse ---
+const spc = analyzeSPC(daily.values);
+
+// Opdater SPC-status i UI
+document.getElementById("spcStatus").textContent =
+  spc.status === "for få datapunkter"
+    ? "SPC: For få datapunkter til analyse"
+    : `SPC: ${spc.status} (median: ${spc.median}, længste serie: ${spc.run}, kryds: ${spc.crosses})`;
+    
     lineChart.data.labels = daily.labels;
     lineChart.data.datasets[0].data = daily.values;
     lineChart.update();
@@ -326,6 +335,7 @@
   
 </body>
 </html>
+
 
 
 
